@@ -4,7 +4,7 @@ import javax.persistence.*;
 import java.sql.Date;
 
 @Entity
-public class MonitoringResult {
+public class MonitoredResult {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private int id;
