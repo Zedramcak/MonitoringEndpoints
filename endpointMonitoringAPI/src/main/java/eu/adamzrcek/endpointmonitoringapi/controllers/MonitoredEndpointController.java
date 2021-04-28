@@ -45,15 +45,12 @@ public class MonitoredEndpointController {
         MonitoredEndpoint getEndpoint = monitoredEndpointService.getMonitoredEndpoint( Integer.parseInt(id));
 
 
-        if (getEndpoint.getOwner().equals(userService.getUserByToken(accessToken))){
-            logger.info("Status code: " + HttpStatus.OK.value() + ", payload: " + getEndpoint);
-            monitoringResultService.createNewMonitoredResultForMonitoredEndpoint(
-                    getEndpoint, HttpStatus.OK.value(), getEndpoint.toString()
-            );
-            return getEndpoint;
+        if (isTheUserOwnerOfThisEndpoint(accessToken, getEndpoint)){
+            return addNewMonitoringResultAndReturnTheEndpoint(getEndpoint);
         }
-        else throw createForbiddenException(getEndpoint, "read");
+        else throw createMonitoringResultAndThrowForbiddenException(getEndpoint, "read");
     }
+
 
 
     @PutMapping("/{id}")
@@ -63,10 +60,11 @@ public class MonitoredEndpointController {
 
         MonitoredEndpoint monitoredEndpoint = monitoredEndpointService.getMonitoredEndpoint(Integer.parseInt(id));
 
-        if (monitoredEndpoint.getOwner().equals(userService.getUserByToken(accessToken))) {
-            return monitoredEndpointService.updateMonitoredEndpoint(Integer.parseInt(id), monitoredEndpointToUpdate);
-        }
-        else throw createForbiddenException(monitoredEndpoint, "update");
+        if (isTheUserOwnerOfThisEndpoint(accessToken, monitoredEndpoint))
+            return addNewMonitoringResultAndReturnTheEndpoint(
+                    monitoredEndpointService.updateMonitoredEndpoint(Integer.parseInt(id), monitoredEndpointToUpdate)
+            );
+        else throw createMonitoringResultAndThrowForbiddenException(monitoredEndpoint, "update");
     }
 
     @DeleteMapping("/{id}")
@@ -74,13 +72,25 @@ public class MonitoredEndpointController {
         int parsedId = Integer.parseInt(id);
         MonitoredEndpoint endpointToDelete = monitoredEndpointService.getMonitoredEndpoint(parsedId);
 
-        if (endpointToDelete.getOwner().equals(userService.getUserByToken(accessToken)))
+        if (isTheUserOwnerOfThisEndpoint(accessToken, endpointToDelete))
             monitoredEndpointService
                     .deleteMonitoredEndpoint(monitoredEndpointService.getMonitoredEndpoint(parsedId));
-        else throw createForbiddenException(endpointToDelete, "delete");
+        else throw createMonitoringResultAndThrowForbiddenException(endpointToDelete, "delete");
     }
 
-    private UnauthorizedException createForbiddenException(MonitoredEndpoint getEndpoint, String message) {
+    private MonitoredEndpoint addNewMonitoringResultAndReturnTheEndpoint(MonitoredEndpoint getEndpoint) {
+        logger.info("Status code: " + HttpStatus.OK.value() + ", payload: " + getEndpoint);
+        monitoringResultService.createNewMonitoredResultForMonitoredEndpoint(
+                getEndpoint, HttpStatus.OK.value(), getEndpoint.toString()
+        );
+        return getEndpoint;
+    }
+
+    private boolean isTheUserOwnerOfThisEndpoint(@RequestHeader("accessToken") String accessToken, MonitoredEndpoint getEndpoint) {
+        return getEndpoint.getOwner().equals(userService.getUserByToken(accessToken));
+    }
+
+    private UnauthorizedException createMonitoringResultAndThrowForbiddenException(MonitoredEndpoint getEndpoint, String message) {
         UnauthorizedException unauthorizedException = new UnauthorizedException(message);
         logger.info("Status code: " + HttpStatus.FORBIDDEN.value() + ", payload: " + unauthorizedException);
         monitoringResultService.createNewMonitoredResultForMonitoredEndpoint(
