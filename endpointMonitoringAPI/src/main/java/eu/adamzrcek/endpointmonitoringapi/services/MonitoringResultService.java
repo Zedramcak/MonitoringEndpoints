@@ -22,13 +22,13 @@ public class MonitoringResultService implements IMonitoringResultService {
     }
 
     @Override
-    public void createNewMonitoredResultForMonitoredEndpoint(MonitoredEndpoint monitoredEndpoint, int statusCode) {
+    public MonitoringResult createNewMonitoredResultForMonitoredEndpoint(MonitoredEndpoint monitoredEndpoint, int statusCode, String payload) {
         MonitoringResult newMonitoringResult = new MonitoringResult();
         newMonitoringResult.setMonitoredEndpoint(monitoredEndpoint);
-        newMonitoringResult.setReturnedPayload(monitoredEndpoint.getName());
+        newMonitoringResult.setReturnedPayload(payload);
         newMonitoringResult.setStatusCode(statusCode);
         newMonitoringResult.setDateOfCheck(Date.valueOf(LocalDate.now()));
 
-        repository.save(newMonitoringResult);
+        return repository.save(newMonitoringResult);
     }
 }
