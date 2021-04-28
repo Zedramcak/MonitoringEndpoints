@@ -9,7 +9,7 @@ import java.sql.Date;
 @Entity
 public class MonitoredEndpoint {
     @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
+    @GeneratedValue
     private int id;
 
     @NonNull
