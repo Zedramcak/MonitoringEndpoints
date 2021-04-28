@@ -18,7 +18,7 @@ public class MonitoredEndpointController {
     private final MonitoredEndpointService monitoredEndpointService;
     private final MonitoringResultService monitoringResultService;
     private final UserService userService;
-    private Logger logger = LoggerFactory.getLogger(MonitoredEndpointController.class);
+    private final Logger logger = LoggerFactory.getLogger(MonitoredEndpointController.class);
 
     public MonitoredEndpointController(MonitoredEndpointService monitoredEndpointService, MonitoringResultService monitoringResultService, UserService userService) {
         this.monitoredEndpointService = monitoredEndpointService;
