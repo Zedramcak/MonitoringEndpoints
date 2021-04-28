@@ -21,12 +21,12 @@ public class UserService implements IUserService {
 
     @Override
     public User getUserByToken(String token) {
-        Optional<User> userToFind = repository.findByAccessToken(token);
-        if (userToFind.isEmpty()){
-            logger.debug("User with provided token not found: " + token);
+        User userToFind = repository.getUserByAccessToken(token);
+        if (userToFind == null){
+            logger.info("User with provided token not found: " + token);
             return null;
         }
-        return userToFind.get();
+        return userToFind;
     }
 
     @Override
