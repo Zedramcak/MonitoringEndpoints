@@ -6,7 +6,7 @@ import org.springframework.data.repository.CrudRepository;
 
 import java.util.List;
 
-public interface MonitoringEndpointRepository extends CrudRepository<MonitoredEndpoint, Integer> {
-    List<MonitoredEndpoint> getMonitoredEndpointByOwner(User owner);
+public interface MonitoredEndpointRepository extends CrudRepository<MonitoredEndpoint, Integer> {
+    List<MonitoredEndpoint> findAllByOwner(User owner);
     MonitoredEndpoint getMonitoredEndpointById(int id);
 }
