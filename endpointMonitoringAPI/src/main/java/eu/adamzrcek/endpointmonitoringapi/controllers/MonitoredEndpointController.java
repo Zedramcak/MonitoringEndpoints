@@ -55,14 +55,6 @@ public class MonitoredEndpointController {
         else throw createForbiddenException(getEndpoint, "read");
     }
 
-    private UnauthorizedException createForbiddenException(MonitoredEndpoint getEndpoint, String message) {
-        UnauthorizedException unauthorizedException = new UnauthorizedException(message);
-        logger.info("Status code: " + HttpStatus.FORBIDDEN.value() + ", payload: " + unauthorizedException);
-        monitoringResultService.createNewMonitoredResultForMonitoredEndpoint(
-                getEndpoint, HttpStatus.FORBIDDEN.value(), unauthorizedException.toString()
-        );
-        throw unauthorizedException;
-    }
 
     @PutMapping("/{id}")
     MonitoredEndpoint updateMonitoredEndpoint(@RequestHeader(value = "accessToken") String accessToken,
@@ -88,6 +80,14 @@ public class MonitoredEndpointController {
         else throw createForbiddenException(endpointToDelete, "delete");
     }
 
+    private UnauthorizedException createForbiddenException(MonitoredEndpoint getEndpoint, String message) {
+        UnauthorizedException unauthorizedException = new UnauthorizedException(message);
+        logger.info("Status code: " + HttpStatus.FORBIDDEN.value() + ", payload: " + unauthorizedException);
+        monitoringResultService.createNewMonitoredResultForMonitoredEndpoint(
+                getEndpoint, HttpStatus.FORBIDDEN.value(), unauthorizedException.toString()
+        );
+        throw unauthorizedException;
+    }
 
     @ResponseStatus(value = HttpStatus.FORBIDDEN)
     private static class UnauthorizedException extends RuntimeException {
