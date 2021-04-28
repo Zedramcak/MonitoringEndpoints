@@ -1,5 +1,8 @@
 package eu.adamzrcek.endpointmonitoringapi.models;
 
+
+import org.springframework.lang.NonNull;
+
 import javax.persistence.*;
 import java.sql.Date;
 
@@ -9,6 +12,7 @@ public class MonitoredEndpoint {
     @GeneratedValue(strategy = GenerationType.AUTO)
     private int id;
 
+    @NonNull
     private String name;
 
     private String url;
