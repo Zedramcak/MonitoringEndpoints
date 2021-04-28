@@ -13,6 +13,7 @@ public class MonitoringResult {
 
     private int statusCode;
 
+    @Column(columnDefinition = "TEXT")
     private String returnedPayload;
 
     @ManyToOne(optional = false)
