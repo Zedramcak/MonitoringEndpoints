@@ -1,8 +1,8 @@
 package eu.adamzrcek.endpointmonitoringapi.services;
 
 import eu.adamzrcek.endpointmonitoringapi.models.MonitoredEndpoint;
-import eu.adamzrcek.endpointmonitoringapi.models.MonitoredResult;
-import eu.adamzrcek.endpointmonitoringapi.repositories.MonitoredResultRepository;
+import eu.adamzrcek.endpointmonitoringapi.models.MonitoringResult;
+import eu.adamzrcek.endpointmonitoringapi.repositories.MonitoringResultRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -14,21 +14,21 @@ import java.util.List;
 public class MonitoringResultService implements IMonitoringResultService {
 
     @Autowired
-    private MonitoredResultRepository repository;
+    private MonitoringResultRepository repository;
 
     @Override
-    public List<MonitoredResult> getLastTenMonitoredResultsForMonitoredEndpoint(MonitoredEndpoint monitoredEndpoint) {
+    public List<MonitoringResult> getLastTenMonitoredResultsForMonitoredEndpoint(MonitoredEndpoint monitoredEndpoint) {
         return repository.getFirst10ByMonitoredEndpointOrderByDateOfCheckDesc(monitoredEndpoint);
     }
 
     @Override
     public void createNewMonitoredResultForMonitoredEndpoint(MonitoredEndpoint monitoredEndpoint, int statusCode) {
-        MonitoredResult newMonitoredResult = new MonitoredResult();
-        newMonitoredResult.setMonitoredEndpoint(monitoredEndpoint);
-        newMonitoredResult.setReturnedPayload(monitoredEndpoint.getName());
-        newMonitoredResult.setStatusCode(statusCode);
-        newMonitoredResult.setDateOfCheck(Date.valueOf(LocalDate.now()));
+        MonitoringResult newMonitoringResult = new MonitoringResult();
+        newMonitoringResult.setMonitoredEndpoint(monitoredEndpoint);
+        newMonitoringResult.setReturnedPayload(monitoredEndpoint.getName());
+        newMonitoringResult.setStatusCode(statusCode);
+        newMonitoringResult.setDateOfCheck(Date.valueOf(LocalDate.now()));
 
-        repository.save(newMonitoredResult);
+        repository.save(newMonitoringResult);
     }
 }

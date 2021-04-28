@@ -5,10 +5,10 @@ import eu.adamzrcek.endpointmonitoringapi.models.User;
 
 import java.util.List;
 
-public interface IMonitoringEndpointService {
+public interface IMonitoredEndpointService {
     List<MonitoredEndpoint> getMonitoredEndpointsForUser(User owner);
-    void createNewMonitoredEndpoint(User owner);
-    void updateMonitoredEndpoint(MonitoredEndpoint endpointToUpdate);
+    MonitoredEndpoint createNewMonitoredEndpoint(MonitoredEndpoint newMonitoredEndpoint);
+    MonitoredEndpoint updateMonitoredEndpoint(int id, MonitoredEndpoint endpointToUpdate);
     void deleteMonitoredEndpoint(MonitoredEndpoint endpointToDelete);
-    MonitoredEndpoint getMonitoredEndpoint(int id, User owner);
+    MonitoredEndpoint getMonitoredEndpoint(int id);
 }
