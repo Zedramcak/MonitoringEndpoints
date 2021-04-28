@@ -20,7 +20,9 @@ public class MonitoredEndpointController {
     private final UserService userService;
     private final Logger logger = LoggerFactory.getLogger(MonitoredEndpointController.class);
 
-    public MonitoredEndpointController(MonitoredEndpointService monitoredEndpointService, MonitoringResultService monitoringResultService, UserService userService) {
+    public MonitoredEndpointController(MonitoredEndpointService monitoredEndpointService,
+                                       MonitoringResultService monitoringResultService,
+                                       UserService userService) {
         this.monitoredEndpointService = monitoredEndpointService;
         this.monitoringResultService = monitoringResultService;
         this.userService = userService;
@@ -40,11 +42,13 @@ public class MonitoredEndpointController {
 
     @GetMapping("/{id}")
     MonitoredEndpoint getMonitoredEndpoint(@PathVariable String id,
-                                           @RequestHeader(value = "accessToken") String accessToken){
+                                           @RequestHeader(value = "accessToken") String accessToken) throws InvalidPath {
+        int parsedId = tryParsePathVariable(id);
 
-        MonitoredEndpoint getEndpoint = monitoredEndpointService.getMonitoredEndpoint( Integer.parseInt(id));
+        MonitoredEndpoint getEndpoint = monitoredEndpointService.getMonitoredEndpoint(parsedId);
 
 
+        if (getEndpoint == null) throw new InvalidPath();
         if (isTheUserOwnerOfThisEndpoint(accessToken, getEndpoint)){
             return logAddNewMonitoringResultAndReturnTheEndpoint(getEndpoint);
         }
@@ -56,26 +60,41 @@ public class MonitoredEndpointController {
     @PutMapping("/{id}")
     MonitoredEndpoint updateMonitoredEndpoint(@RequestHeader(value = "accessToken") String accessToken,
                                               @PathVariable String id,
-                                              @RequestBody MonitoredEndpoint monitoredEndpointToUpdate){
+                                              @RequestBody MonitoredEndpoint monitoredEndpointToUpdate) throws InvalidPath {
 
-        MonitoredEndpoint monitoredEndpoint = monitoredEndpointService.getMonitoredEndpoint(Integer.parseInt(id));
+        int parsedId = tryParsePathVariable(id);
+
+        MonitoredEndpoint monitoredEndpoint = monitoredEndpointService.getMonitoredEndpoint(parsedId);
 
         if (isTheUserOwnerOfThisEndpoint(accessToken, monitoredEndpoint))
             return logAddNewMonitoringResultAndReturnTheEndpoint(
-                    monitoredEndpointService.updateMonitoredEndpoint(Integer.parseInt(id), monitoredEndpointToUpdate)
+                    monitoredEndpointService.updateMonitoredEndpoint(parsedId, monitoredEndpointToUpdate)
             );
         else throw logCreateMonitoringResultAndThrowForbiddenException(monitoredEndpoint, "update");
     }
 
     @DeleteMapping("/{id}")
-    void deleteMonitoredEndpoint(@PathVariable String id, @RequestHeader(value = "accessToken") String accessToken){
-        int parsedId = Integer.parseInt(id);
+    void deleteMonitoredEndpoint(@PathVariable String id, @RequestHeader(value = "accessToken") String accessToken) throws InvalidPath {
+
+        int parsedId = tryParsePathVariable(id);
+
         MonitoredEndpoint endpointToDelete = monitoredEndpointService.getMonitoredEndpoint(parsedId);
 
         if (isTheUserOwnerOfThisEndpoint(accessToken, endpointToDelete))
             monitoredEndpointService
                     .deleteMonitoredEndpoint(monitoredEndpointService.getMonitoredEndpoint(parsedId));
         else throw logCreateMonitoringResultAndThrowForbiddenException(endpointToDelete, "delete");
+    }
+
+    private int tryParsePathVariable(String id) throws InvalidPath {
+        int parsedId;
+
+        try {
+            parsedId = Integer.parseInt(id);
+        } catch (NumberFormatException e) {
+            throw new InvalidPath();
+        }
+        return parsedId;
     }
 
     private MonitoredEndpoint logAddNewMonitoringResultAndReturnTheEndpoint(MonitoredEndpoint getEndpoint) {
@@ -104,6 +123,11 @@ public class MonitoredEndpointController {
         public UnauthorizedException(String message){
             super(String.format("You are not allowed to %S this endpoint", message));
         }
+
+    }
+
+    @ResponseStatus(value = HttpStatus.NOT_FOUND)
+    private static class InvalidPath extends RuntimeException {
 
     }
 }

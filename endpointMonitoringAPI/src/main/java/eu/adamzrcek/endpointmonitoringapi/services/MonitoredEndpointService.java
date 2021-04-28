@@ -53,6 +53,9 @@ public class MonitoredEndpointService implements IMonitoredEndpointService {
     @Override
     public MonitoredEndpoint getMonitoredEndpoint(int id) {
         MonitoredEndpoint endpointToFind = repository.getMonitoredEndpointById(id);
+        if (endpointToFind == null){
+            return null;
+        }
         endpointToFind.setDateOfLastCheck(Date.valueOf(LocalDate.now()));
         return endpointToFind;
     }
