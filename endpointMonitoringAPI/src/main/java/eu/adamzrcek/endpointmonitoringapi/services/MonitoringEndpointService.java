@@ -4,11 +4,13 @@ import eu.adamzrcek.endpointmonitoringapi.models.MonitoredEndpoint;
 import eu.adamzrcek.endpointmonitoringapi.models.User;
 import eu.adamzrcek.endpointmonitoringapi.repositories.MonitoringEndpointRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
 
 import java.sql.Date;
 import java.time.LocalDate;
 import java.util.List;
 
+@Service
 public class MonitoringEndpointService implements IMonitoringEndpointService {
 
     private MonitoringEndpointRepository repository;

@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -26,5 +27,15 @@ public class UserService implements IUserService {
             return null;
         }
         return userToFind.get();
+    }
+
+    @Override
+    public List<User> findAll() {
+        return (List<User>) repository.findAll();
+    }
+
+    @Override
+    public void addNewUser(User user) {
+        repository.save(user);
     }
 }
