@@ -67,4 +67,16 @@ public class MonitoredEndpoint {
     public void setDateOfLastCheck(Date dateOfLastCheck) {
         this.dateOfLastCheck = dateOfLastCheck;
     }
+
+    @Override
+    public String toString() {
+        return "MonitoredEndpoint{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", url='" + url + '\'' +
+                ", dateOfCreation=" + dateOfCreation +
+                ", dateOfLastCheck=" + dateOfLastCheck +
+                ", owner=" + owner +
+                '}';
+    }
 }

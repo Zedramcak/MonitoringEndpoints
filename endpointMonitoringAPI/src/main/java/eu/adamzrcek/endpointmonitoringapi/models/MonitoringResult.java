@@ -4,7 +4,7 @@ import javax.persistence.*;
 import java.sql.Date;
 
 @Entity
-public class MonitoredResult {
+public class MonitoringResult {
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
     private int id;
@@ -56,5 +56,16 @@ public class MonitoredResult {
 
     public void setMonitoredEndpoint(MonitoredEndpoint monitoredEndpoint) {
         this.monitoredEndpoint = monitoredEndpoint;
+    }
+
+    @Override
+    public String toString() {
+        return "MonitoringResult{" +
+                "id=" + id +
+                ", dateOfCheck=" + dateOfCheck +
+                ", statusCode=" + statusCode +
+                ", returnedPayload='" + returnedPayload + '\'' +
+                ", monitoredEndpoint=" + monitoredEndpoint +
+                '}';
     }
 }
