@@ -7,4 +7,5 @@ import java.util.List;
 public interface IMonitoringResultService {
     List<MonitoringResult> getLastTenMonitoredResultsForMonitoredEndpoint(MonitoredEndpoint monitoredEndpoint);
     MonitoringResult createNewMonitoredResultForMonitoredEndpoint(MonitoredEndpoint monitoredEndpoint, int statusCode, String payload);
+    void deleteAllMonitoredResultsForMonitoredEndpoint(MonitoredEndpoint monitoredEndpoint);
 }

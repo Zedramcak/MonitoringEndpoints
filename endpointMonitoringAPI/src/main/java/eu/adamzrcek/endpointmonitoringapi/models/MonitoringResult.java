@@ -1,5 +1,7 @@
 package eu.adamzrcek.endpointmonitoringapi.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
 import javax.persistence.*;
 import java.sql.Date;
 
@@ -16,6 +18,7 @@ public class MonitoringResult {
     @Column(columnDefinition = "TEXT")
     private String returnedPayload;
 
+    @JsonIgnore
     @ManyToOne(optional = false)
     private MonitoredEndpoint monitoredEndpoint;
 
