@@ -1,6 +1,7 @@
 package eu.adamzrcek.endpointmonitoringapi.controllers;
 
 import eu.adamzrcek.endpointmonitoringapi.models.MonitoredEndpoint;
+import eu.adamzrcek.endpointmonitoringapi.models.MonitoringResult;
 import eu.adamzrcek.endpointmonitoringapi.services.MonitoredEndpointService;
 import eu.adamzrcek.endpointmonitoringapi.services.MonitoringResultService;
 import eu.adamzrcek.endpointmonitoringapi.services.UserService;
@@ -28,14 +29,15 @@ public class MonitoredEndpointController {
         this.userService = userService;
     }
 
-    @GetMapping("/")
+    @GetMapping("")
     List<MonitoredEndpoint> getAllEndpoints(@RequestHeader(value = "accessToken") String accessToken){
         return monitoredEndpointService.getMonitoredEndpointsForUser(userService.getUserByToken(accessToken));
     }
 
-    @PostMapping("/")
+    @PostMapping("")
     MonitoredEndpoint addNewEndpoint(@RequestHeader(value = "accessToken") String accessToken,
                                      @RequestBody MonitoredEndpoint newMonitoredEndpoint){
+
         newMonitoredEndpoint.setOwner(userService.getUserByToken(accessToken));
         MonitoredEndpoint createdEndpoint =  monitoredEndpointService.createNewMonitoredEndpoint(newMonitoredEndpoint);
         logger.info("Status code: " + HttpStatus.CREATED.value() + ", payload: " + createdEndpoint);
@@ -50,14 +52,21 @@ public class MonitoredEndpointController {
                                            @RequestHeader(value = "accessToken") String accessToken) throws InvalidPath {
         int parsedId = tryParseIdThrowExceptionIfUnableToParse(id);
 
-        MonitoredEndpoint getEndpoint = monitoredEndpointService.getMonitoredEndpoint(parsedId);
-
-
-        if (getEndpoint == null) throw new InvalidPath();
+        MonitoredEndpoint getEndpoint = ifEndpointExistReturnItElseThrowException(parsedId);
         if (isTheUserOwnerOfThisEndpoint(accessToken, getEndpoint)){
             return logAddNewMonitoringResultAndReturnTheEndpoint(getEndpoint);
         }
         else throw logCreateMonitoringResultAndThrowForbiddenException(getEndpoint, "read");
+    }
+
+    @GetMapping("/{id}/monitoringResults")
+    List<MonitoringResult> getMonitoringResultsForMonitoredEndpoint(@PathVariable String id,
+                                                                    @RequestHeader(value = "accessToken") String accessToken) throws InvalidPath{
+        int parsedId = tryParseIdThrowExceptionIfUnableToParse(id);
+
+        MonitoredEndpoint endpoint = ifEndpointExistReturnItElseThrowException(parsedId);
+        if (isTheUserOwnerOfThisEndpoint(accessToken, endpoint)) return monitoringResultService.getLastTenMonitoredResultsForMonitoredEndpoint(endpoint);
+        else throw logCreateMonitoringResultAndThrowForbiddenException(endpoint, "read");
     }
 
 
@@ -69,8 +78,7 @@ public class MonitoredEndpointController {
 
         int parsedId = tryParseIdThrowExceptionIfUnableToParse(id);
 
-        MonitoredEndpoint monitoredEndpoint = monitoredEndpointService.getMonitoredEndpoint(parsedId);
-
+        MonitoredEndpoint monitoredEndpoint = ifEndpointExistReturnItElseThrowException(parsedId);
         if (isTheUserOwnerOfThisEndpoint(accessToken, monitoredEndpoint))
             return logAddNewMonitoringResultAndReturnTheEndpoint(
                     monitoredEndpointService.updateMonitoredEndpoint(parsedId, monitoredEndpointToUpdate)
@@ -83,12 +91,21 @@ public class MonitoredEndpointController {
 
         int parsedId = tryParseIdThrowExceptionIfUnableToParse(id);
 
-        MonitoredEndpoint endpointToDelete = monitoredEndpointService.getMonitoredEndpoint(parsedId);
-
-        if (isTheUserOwnerOfThisEndpoint(accessToken, endpointToDelete))
+        MonitoredEndpoint endpointToDelete = ifEndpointExistReturnItElseThrowException(parsedId);
+        if (isTheUserOwnerOfThisEndpoint(accessToken, endpointToDelete)) {
+            logger.info("Deleting Monitored Endpoint id: " + parsedId);
+            monitoringResultService.deleteAllMonitoredResultsForMonitoredEndpoint(endpointToDelete);
             monitoredEndpointService
                     .deleteMonitoredEndpoint(monitoredEndpointService.getMonitoredEndpoint(parsedId));
+        }
         else throw logCreateMonitoringResultAndThrowForbiddenException(endpointToDelete, "delete");
+    }
+
+    private MonitoredEndpoint ifEndpointExistReturnItElseThrowException(int parsedId) {
+        MonitoredEndpoint endpointToDelete = monitoredEndpointService.getMonitoredEndpoint(parsedId);
+
+        if (endpointToDelete == null) throw new InvalidPath(String.format("Cannot find endpoint with id: %d", parsedId));
+        return endpointToDelete;
     }
 
     private int tryParseIdThrowExceptionIfUnableToParse(String id) throws InvalidPath {
@@ -97,7 +114,7 @@ public class MonitoredEndpointController {
         try {
             parsedId = Integer.parseInt(id);
         } catch (NumberFormatException e) {
-            throw new InvalidPath();
+            throw new InvalidPath(String.format("Cannot find endpoint with id: %s", id));
         }
         return parsedId;
     }
@@ -133,6 +150,8 @@ public class MonitoredEndpointController {
 
     @ResponseStatus(value = HttpStatus.NOT_FOUND)
     private static class InvalidPath extends RuntimeException {
-
+        public InvalidPath(String message){
+            super(message);
+        }
     }
 }
