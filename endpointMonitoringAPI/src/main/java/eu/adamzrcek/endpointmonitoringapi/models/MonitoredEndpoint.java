@@ -5,7 +5,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.springframework.lang.NonNull;
 
 import javax.persistence.*;
-import java.sql.Date;
+import java.sql.Timestamp;
 
 @Entity
 public class MonitoredEndpoint {
@@ -18,9 +18,13 @@ public class MonitoredEndpoint {
 
     private String url;
 
-    private Date dateOfCreation;
+    @Column(columnDefinition = "DateTime")
+    private Timestamp dateOfCreation;
 
-    private Date dateOfLastCheck;
+    @Column(columnDefinition = "DateTime")
+    private Timestamp dateOfLastCheck;
+
+    private int monitoredInterval;
 
     @JsonIgnore
     @ManyToOne(optional = false)
@@ -58,20 +62,28 @@ public class MonitoredEndpoint {
         this.url = url;
     }
 
-    public Date getDateOfCreation() {
+    public Timestamp getDateOfCreation() {
         return dateOfCreation;
     }
 
-    public void setDateOfCreation(Date dateOfCreation) {
+    public void setDateOfCreation(Timestamp dateOfCreation) {
         this.dateOfCreation = dateOfCreation;
     }
 
-    public Date getDateOfLastCheck() {
+    public Timestamp getDateOfLastCheck() {
         return dateOfLastCheck;
     }
 
-    public void setDateOfLastCheck(Date dateOfLastCheck) {
+    public void setDateOfLastCheck(Timestamp dateOfLastCheck) {
         this.dateOfLastCheck = dateOfLastCheck;
+    }
+
+    public int getMonitoredInterval() {
+        return monitoredInterval;
+    }
+
+    public void setMonitoredInterval(int monitoredInterval) {
+        this.monitoredInterval = monitoredInterval;
     }
 
     @Override
@@ -82,6 +94,7 @@ public class MonitoredEndpoint {
                 ", url='" + url + '\'' +
                 ", dateOfCreation=" + dateOfCreation +
                 ", dateOfLastCheck=" + dateOfLastCheck +
+                ", monitoredInterval=" + monitoredInterval +
                 '}';
     }
 }

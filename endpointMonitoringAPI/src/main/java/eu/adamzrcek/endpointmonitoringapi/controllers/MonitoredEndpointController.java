@@ -39,7 +39,7 @@ public class MonitoredEndpointController {
                                      @RequestBody MonitoredEndpoint newMonitoredEndpoint){
 
         newMonitoredEndpoint.setOwner(userService.getUserByToken(accessToken));
-        MonitoredEndpoint createdEndpoint =  monitoredEndpointService.createNewMonitoredEndpoint(newMonitoredEndpoint);
+        MonitoredEndpoint createdEndpoint = monitoredEndpointService.createNewMonitoredEndpoint(newMonitoredEndpoint);
         logger.info("Status code: " + HttpStatus.CREATED.value() + ", payload: " + createdEndpoint);
         monitoringResultService.createNewMonitoredResultForMonitoredEndpoint(createdEndpoint,
                 HttpStatus.CREATED.value(),
@@ -53,10 +53,9 @@ public class MonitoredEndpointController {
         int parsedId = tryParseIdThrowExceptionIfUnableToParse(id);
 
         MonitoredEndpoint getEndpoint = ifEndpointExistReturnItElseThrowException(parsedId);
-        if (isTheUserOwnerOfThisEndpoint(accessToken, getEndpoint)){
+        if (isTheUserOwnerOfThisEndpoint(accessToken, getEndpoint)) {
             return logAddNewMonitoringResultAndReturnTheEndpoint(getEndpoint);
-        }
-        else throw logCreateMonitoringResultAndThrowForbiddenException(getEndpoint, "read");
+        } else throw logCreateMonitoringResultAndThrowForbiddenException(getEndpoint, "read");
     }
 
     @GetMapping("/{id}/monitoringResults")
@@ -65,10 +64,10 @@ public class MonitoredEndpointController {
         int parsedId = tryParseIdThrowExceptionIfUnableToParse(id);
 
         MonitoredEndpoint endpoint = ifEndpointExistReturnItElseThrowException(parsedId);
-        if (isTheUserOwnerOfThisEndpoint(accessToken, endpoint)) return monitoringResultService.getLastTenMonitoredResultsForMonitoredEndpoint(endpoint);
+        if (isTheUserOwnerOfThisEndpoint(accessToken, endpoint))
+            return monitoringResultService.getLastTenMonitoredResultsForMonitoredEndpoint(endpoint);
         else throw logCreateMonitoringResultAndThrowForbiddenException(endpoint, "read");
     }
-
 
 
     @PutMapping("/{id}")
@@ -97,14 +96,14 @@ public class MonitoredEndpointController {
             monitoringResultService.deleteAllMonitoredResultsForMonitoredEndpoint(endpointToDelete);
             monitoredEndpointService
                     .deleteMonitoredEndpoint(monitoredEndpointService.getMonitoredEndpoint(parsedId));
-        }
-        else throw logCreateMonitoringResultAndThrowForbiddenException(endpointToDelete, "delete");
+        } else throw logCreateMonitoringResultAndThrowForbiddenException(endpointToDelete, "delete");
     }
 
     private MonitoredEndpoint ifEndpointExistReturnItElseThrowException(int parsedId) {
         MonitoredEndpoint endpointToDelete = monitoredEndpointService.getMonitoredEndpoint(parsedId);
 
-        if (endpointToDelete == null) throw new InvalidPath(String.format("Cannot find endpoint with id: %d", parsedId));
+        if (endpointToDelete == null)
+            throw new InvalidPath(String.format("Cannot find endpoint with id: %d", parsedId));
         return endpointToDelete;
     }
 
@@ -142,15 +141,15 @@ public class MonitoredEndpointController {
 
     @ResponseStatus(value = HttpStatus.FORBIDDEN)
     private static class UnauthorizedException extends RuntimeException {
-        public UnauthorizedException(String message){
-            super(String.format("You are not allowed to %S this endpoint", message));
+        public UnauthorizedException(String message) {
+            super(String.format("You are not allowed to %s this endpoint", message));
         }
 
     }
 
     @ResponseStatus(value = HttpStatus.NOT_FOUND)
     private static class InvalidPath extends RuntimeException {
-        public InvalidPath(String message){
+        public InvalidPath(String message) {
             super(message);
         }
     }

@@ -5,8 +5,9 @@ import eu.adamzrcek.endpointmonitoringapi.models.User;
 import eu.adamzrcek.endpointmonitoringapi.repositories.MonitoredEndpointRepository;
 import org.springframework.stereotype.Service;
 
-import java.sql.Date;
-import java.time.LocalDate;
+import java.sql.Timestamp;
+import java.time.Duration;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,7 +27,7 @@ public class MonitoredEndpointService implements IMonitoredEndpointService {
 
     @Override
     public MonitoredEndpoint createNewMonitoredEndpoint(MonitoredEndpoint newMonitoredEndpoint) {
-        newMonitoredEndpoint.setDateOfCreation(Date.valueOf(LocalDate.now()));
+        newMonitoredEndpoint.setDateOfCreation(Timestamp.valueOf(LocalDateTime.now()));
         newMonitoredEndpoint = repository.save(newMonitoredEndpoint);
         newMonitoredEndpoint.setUrl("/monitoredEndpoint/" + newMonitoredEndpoint.getId());
         return repository.save(newMonitoredEndpoint);
@@ -36,7 +37,8 @@ public class MonitoredEndpointService implements IMonitoredEndpointService {
     public MonitoredEndpoint updateMonitoredEndpoint(int id, MonitoredEndpoint endpointToUpdate) {
         getMonitoredEndpoint(id).setName(endpointToUpdate.getName());
         endpointToUpdate = getMonitoredEndpoint(id);
-        endpointToUpdate.setDateOfLastCheck(Date.valueOf(LocalDate.now()));
+        endpointToUpdate.setDateOfLastCheck(Timestamp.valueOf(LocalDateTime.now()));
+        endpointToUpdate.setMonitoredInterval(endpointToUpdate.getDateOfLastCheck().compareTo(Timestamp.valueOf(LocalDateTime.now())));
         return repository.save(endpointToUpdate);
     }
 
@@ -48,10 +50,25 @@ public class MonitoredEndpointService implements IMonitoredEndpointService {
     @Override
     public MonitoredEndpoint getMonitoredEndpoint(int id) {
         MonitoredEndpoint endpointToFind = repository.getMonitoredEndpointById(id);
-        if (endpointToFind == null){
+        Timestamp localTime = Timestamp.valueOf(LocalDateTime.now());
+        if (endpointToFind == null) {
             return null;
         }
-        endpointToFind.setDateOfLastCheck(Date.valueOf(LocalDate.now()));
+        if (endpointToFind.getDateOfLastCheck() == null) {
+            endpointToFind.setDateOfLastCheck(localTime);
+            endpointToFind.setMonitoredInterval(
+                    (int) Duration.between(
+                            endpointToFind.getDateOfCreation().toLocalDateTime(),
+                            localTime.toLocalDateTime()
+                    ).toSeconds()
+            );
+        } else {
+            endpointToFind.setMonitoredInterval((int) Duration.between(
+                    endpointToFind.getDateOfLastCheck().toLocalDateTime(),
+                    localTime.toLocalDateTime()
+            ).toSeconds());
+            endpointToFind.setDateOfLastCheck(localTime);
+        }
         return endpointToFind;
     }
 }

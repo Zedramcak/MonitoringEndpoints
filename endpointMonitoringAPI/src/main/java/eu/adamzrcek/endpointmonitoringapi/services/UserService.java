@@ -7,7 +7,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 
 @Service
 public class UserService implements IUserService {
@@ -22,7 +21,7 @@ public class UserService implements IUserService {
     @Override
     public User getUserByToken(String token) {
         User userToFind = repository.getUserByAccessToken(token);
-        if (userToFind == null){
+        if (userToFind == null) {
             logger.info("User with provided token not found: " + token);
             return null;
         }

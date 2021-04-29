@@ -8,5 +8,6 @@ import java.util.List;
 
 public interface MonitoredEndpointRepository extends CrudRepository<MonitoredEndpoint, Integer> {
     List<MonitoredEndpoint> findAllByOwner(User owner);
+
     MonitoredEndpoint getMonitoredEndpointById(int id);
 }

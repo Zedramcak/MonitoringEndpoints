@@ -3,12 +3,11 @@ package eu.adamzrcek.endpointmonitoringapi.services;
 import eu.adamzrcek.endpointmonitoringapi.models.MonitoredEndpoint;
 import eu.adamzrcek.endpointmonitoringapi.models.MonitoringResult;
 import eu.adamzrcek.endpointmonitoringapi.repositories.MonitoringResultRepository;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.sql.Date;
-import java.time.LocalDate;
+import java.sql.Timestamp;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -31,7 +30,7 @@ public class MonitoringResultService implements IMonitoringResultService {
         newMonitoringResult.setMonitoredEndpoint(monitoredEndpoint);
         newMonitoringResult.setReturnedPayload(payload);
         newMonitoringResult.setStatusCode(statusCode);
-        newMonitoringResult.setDateOfCheck(Date.valueOf(LocalDate.now()));
+        newMonitoringResult.setDateOfCheck(Timestamp.valueOf(LocalDateTime.now()));
 
         return repository.save(newMonitoringResult);
     }

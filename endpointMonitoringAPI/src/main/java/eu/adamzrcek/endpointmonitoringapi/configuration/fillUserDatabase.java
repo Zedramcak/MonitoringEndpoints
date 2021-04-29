@@ -14,8 +14,8 @@ public class fillUserDatabase {
     Logger logger = LoggerFactory.getLogger(fillUserDatabase.class);
 
     @Bean
-    CommandLineRunner addUsersToDatabaseIfEmpty(UserService userService){
-        if (userService.findAll().size() == 0){
+    CommandLineRunner addUsersToDatabaseIfEmpty(UserService userService) {
+        if (userService.findAll().size() == 0) {
             User applifting = new User();
             User batman = new User();
             applifting.setUserName("Applifting");

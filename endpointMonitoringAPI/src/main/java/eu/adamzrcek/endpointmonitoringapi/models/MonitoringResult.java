@@ -3,7 +3,7 @@ package eu.adamzrcek.endpointmonitoringapi.models;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import javax.persistence.*;
-import java.sql.Date;
+import java.sql.Timestamp;
 
 @Entity
 public class MonitoringResult {
@@ -11,7 +11,8 @@ public class MonitoringResult {
     @GeneratedValue
     private int id;
 
-    private Date dateOfCheck;
+    @Column(columnDefinition = "DateTime")
+    private Timestamp dateOfCheck;
 
     private int statusCode;
 
@@ -30,11 +31,11 @@ public class MonitoringResult {
         this.id = id;
     }
 
-    public Date getDateOfCheck() {
+    public Timestamp getDateOfCheck() {
         return dateOfCheck;
     }
 
-    public void setDateOfCheck(Date dateOfCheck) {
+    public void setDateOfCheck(Timestamp dateOfCheck) {
         this.dateOfCheck = dateOfCheck;
     }
 
