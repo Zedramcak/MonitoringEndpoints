@@ -18,8 +18,6 @@ public class MonitoredEndpointService implements IMonitoredEndpointService {
 
     private final MonitoredEndpointRepository repository;
 
-    private Logger logger = LoggerFactory.getLogger(MonitoredEndpointService.class);
-
     public MonitoredEndpointService(MonitoredEndpointRepository repository) {
         this.repository = repository;
     }
