@@ -1,6 +1,7 @@
 package eu.adamzrcek.endpointmonitoringapi.models;
 
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import org.springframework.lang.NonNull;
 
 import javax.persistence.*;
@@ -21,6 +22,7 @@ public class MonitoredEndpoint {
 
     private Date dateOfLastCheck;
 
+    @JsonIgnore
     @ManyToOne(optional = false)
     private User owner;
 
@@ -80,7 +82,6 @@ public class MonitoredEndpoint {
                 ", url='" + url + '\'' +
                 ", dateOfCreation=" + dateOfCreation +
                 ", dateOfLastCheck=" + dateOfLastCheck +
-                ", owner=" + owner +
                 '}';
     }
 }
