@@ -30,13 +30,15 @@ public class MonitoredEndpointController {
     }
 
     @GetMapping("")
-    List<MonitoredEndpoint> getAllEndpoints(@RequestHeader(value = "accessToken") String accessToken){
+    List<MonitoredEndpoint> getAllEndpoints(@RequestHeader(value = "accessToken") String accessToken) throws InvalidToken, NoSuchUser {
+        checkAccessToken(accessToken);
         return monitoredEndpointService.getMonitoredEndpointsForUser(userService.getUserByToken(accessToken));
     }
 
     @PostMapping("")
     MonitoredEndpoint addNewEndpoint(@RequestHeader(value = "accessToken") String accessToken,
-                                     @RequestBody MonitoredEndpoint newMonitoredEndpoint){
+                                     @RequestBody MonitoredEndpoint newMonitoredEndpoint) throws InvalidToken, NoSuchUser {
+        checkAccessToken(accessToken);
 
         newMonitoredEndpoint.setOwner(userService.getUserByToken(accessToken));
         MonitoredEndpoint createdEndpoint = monitoredEndpointService.createNewMonitoredEndpoint(newMonitoredEndpoint);
@@ -49,7 +51,8 @@ public class MonitoredEndpointController {
 
     @GetMapping("/{id}")
     MonitoredEndpoint getMonitoredEndpoint(@PathVariable String id,
-                                           @RequestHeader(value = "accessToken") String accessToken) throws InvalidPath {
+                                           @RequestHeader(value = "accessToken") String accessToken) throws InvalidPath, InvalidToken, NoSuchUser {
+        checkAccessToken(accessToken);
         int parsedId = tryParseIdThrowExceptionIfUnableToParse(id);
 
         MonitoredEndpoint getEndpoint = ifEndpointExistReturnItElseThrowException(parsedId);
@@ -60,7 +63,8 @@ public class MonitoredEndpointController {
 
     @GetMapping("/{id}/monitoringResults")
     List<MonitoringResult> getMonitoringResultsForMonitoredEndpoint(@PathVariable String id,
-                                                                    @RequestHeader(value = "accessToken") String accessToken) throws InvalidPath{
+                                                                    @RequestHeader(value = "accessToken") String accessToken) throws InvalidPath, InvalidToken, NoSuchUser {
+        checkAccessToken(accessToken);
         int parsedId = tryParseIdThrowExceptionIfUnableToParse(id);
 
         MonitoredEndpoint endpoint = ifEndpointExistReturnItElseThrowException(parsedId);
@@ -73,7 +77,8 @@ public class MonitoredEndpointController {
     @PutMapping("/{id}")
     MonitoredEndpoint updateMonitoredEndpoint(@RequestHeader(value = "accessToken") String accessToken,
                                               @PathVariable String id,
-                                              @RequestBody MonitoredEndpoint monitoredEndpointToUpdate) throws InvalidPath {
+                                              @RequestBody MonitoredEndpoint monitoredEndpointToUpdate) throws InvalidPath, InvalidToken, NoSuchUser {
+        checkAccessToken(accessToken);
 
         int parsedId = tryParseIdThrowExceptionIfUnableToParse(id);
 
@@ -86,8 +91,9 @@ public class MonitoredEndpointController {
     }
 
     @DeleteMapping("/{id}")
-    void deleteMonitoredEndpoint(@PathVariable String id, @RequestHeader(value = "accessToken") String accessToken) throws InvalidPath {
+    void deleteMonitoredEndpoint(@PathVariable String id, @RequestHeader(value = "accessToken") String accessToken) throws InvalidPath, InvalidToken, NoSuchUser {
 
+        checkAccessToken(accessToken);
         int parsedId = tryParseIdThrowExceptionIfUnableToParse(id);
 
         MonitoredEndpoint endpointToDelete = ifEndpointExistReturnItElseThrowException(parsedId);
@@ -97,6 +103,15 @@ public class MonitoredEndpointController {
             monitoredEndpointService
                     .deleteMonitoredEndpoint(monitoredEndpointService.getMonitoredEndpoint(parsedId));
         } else throw logCreateMonitoringResultAndThrowForbiddenException(endpointToDelete, "delete");
+    }
+
+    private void checkAccessToken(String accessToken) throws InvalidToken, NoSuchUser {
+        if (!accessToken.matches("[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}")) {
+            throw new InvalidToken("Valid token not provided");
+        }
+        if (userService.getUserByToken(accessToken) == null){
+            throw new NoSuchUser("Cannot find user with token: " + accessToken);
+        }
     }
 
     private MonitoredEndpoint ifEndpointExistReturnItElseThrowException(int parsedId) {
@@ -150,6 +165,20 @@ public class MonitoredEndpointController {
     @ResponseStatus(value = HttpStatus.NOT_FOUND)
     private static class InvalidPath extends RuntimeException {
         public InvalidPath(String message) {
+            super(message);
+        }
+    }
+
+    @ResponseStatus(value = HttpStatus.PRECONDITION_FAILED)
+    private static class InvalidToken extends RuntimeException {
+        public InvalidToken(String message) {
+            super(message);
+        }
+    }
+
+    @ResponseStatus(value = HttpStatus.UNAUTHORIZED)
+    private static class NoSuchUser extends RuntimeException {
+        public NoSuchUser(String message) {
             super(message);
         }
     }
