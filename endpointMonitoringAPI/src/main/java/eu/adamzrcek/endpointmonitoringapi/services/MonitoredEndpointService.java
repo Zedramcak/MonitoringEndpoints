@@ -3,9 +3,6 @@ package eu.adamzrcek.endpointmonitoringapi.services;
 import eu.adamzrcek.endpointmonitoringapi.models.MonitoredEndpoint;
 import eu.adamzrcek.endpointmonitoringapi.models.User;
 import eu.adamzrcek.endpointmonitoringapi.repositories.MonitoredEndpointRepository;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.sql.Date;
