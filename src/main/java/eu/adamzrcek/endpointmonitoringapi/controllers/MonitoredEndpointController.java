@@ -11,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
+import java.awt.*;
 import java.util.List;
 
 @RestController
@@ -32,7 +33,7 @@ public class MonitoredEndpointController {
 
     @GetMapping("")
     List<MonitoredEndpoint> getAllEndpoints(@RequestHeader(value = "accessToken") String accessToken) throws InvalidPrecondition, NoSuchUser {
-        checkAccessToken(accessToken);
+        checkAccessToken(accessToken, null);
 
         return monitoredEndpointService.getMonitoredEndpointsForUser(userService.getUserByToken(accessToken));
     }
@@ -41,8 +42,9 @@ public class MonitoredEndpointController {
     MonitoredEndpoint addNewEndpoint(@RequestHeader(value = "accessToken") String accessToken,
                                      @RequestBody MonitoredEndpoint newMonitoredEndpoint,
                                      HttpServletResponse response) throws InvalidPrecondition, NoSuchUser {
-        checkAccessToken(accessToken);
-        checkHTTPBodyParameters(newMonitoredEndpoint);
+
+        checkAccessToken(accessToken, null);
+        checkHTTPBodyParameters(newMonitoredEndpoint, null);
 
         newMonitoredEndpoint.setOwner(userService.getUserByToken(accessToken));
         MonitoredEndpoint createdEndpoint = monitoredEndpointService.createNewMonitoredEndpoint(newMonitoredEndpoint);
@@ -57,10 +59,9 @@ public class MonitoredEndpointController {
     @GetMapping("/{id}")
     MonitoredEndpoint getMonitoredEndpoint(@PathVariable String id,
                                            @RequestHeader(value = "accessToken") String accessToken) throws InvalidPath, InvalidPrecondition, NoSuchUser {
-        checkAccessToken(accessToken);
-        int parsedId = tryParseIdThrowExceptionIfUnableToParse(id);
+        MonitoredEndpoint getEndpoint = returnMonitoredEndpointIfItExistsElseThrowException(tryParseIdThrowExceptionIfUnableToParse(id));
+        checkAccessToken(accessToken, getEndpoint);
 
-        MonitoredEndpoint getEndpoint = ifEndpointExistReturnItElseThrowException(parsedId);
         if (isTheUserOwnerOfThisEndpoint(accessToken, getEndpoint)) {
             return logAddNewMonitoringResultAndReturnTheEndpoint(getEndpoint);
         } else throw logCreateMonitoringResultAndThrowForbiddenException(getEndpoint, "read");
@@ -69,13 +70,12 @@ public class MonitoredEndpointController {
     @GetMapping("/{id}/monitoringResults")
     List<MonitoringResult> getMonitoringResultsForMonitoredEndpoint(@PathVariable String id,
                                                                     @RequestHeader(value = "accessToken") String accessToken) throws InvalidPath, InvalidPrecondition, NoSuchUser {
-        checkAccessToken(accessToken);
-        int parsedId = tryParseIdThrowExceptionIfUnableToParse(id);
+        MonitoredEndpoint getEndpoint = returnMonitoredEndpointIfItExistsElseThrowException(tryParseIdThrowExceptionIfUnableToParse(id));
+        checkAccessToken(accessToken, getEndpoint);
 
-        MonitoredEndpoint endpoint = ifEndpointExistReturnItElseThrowException(parsedId);
-        if (isTheUserOwnerOfThisEndpoint(accessToken, endpoint))
-            return monitoringResultService.getLastTenMonitoredResultsForMonitoredEndpoint(endpoint);
-        else throw logCreateMonitoringResultAndThrowForbiddenException(endpoint, "read");
+        if (isTheUserOwnerOfThisEndpoint(accessToken, getEndpoint))
+            return monitoringResultService.getLastTenMonitoredResultsForMonitoredEndpoint(getEndpoint);
+        else throw logCreateMonitoringResultAndThrowForbiddenException(getEndpoint, "read");
     }
 
 
@@ -83,53 +83,74 @@ public class MonitoredEndpointController {
     MonitoredEndpoint updateMonitoredEndpoint(@RequestHeader(value = "accessToken") String accessToken,
                                               @PathVariable String id,
                                               @RequestBody MonitoredEndpoint monitoredEndpointToUpdate) throws InvalidPath, InvalidPrecondition, NoSuchUser {
-        checkAccessToken(accessToken);
+        MonitoredEndpoint getEndpoint = returnMonitoredEndpointIfItExistsElseThrowException(tryParseIdThrowExceptionIfUnableToParse(id));
+        checkAccessToken(accessToken, getEndpoint);
 
-        int parsedId = tryParseIdThrowExceptionIfUnableToParse(id);
+        checkHTTPBodyParameters(monitoredEndpointToUpdate, getEndpoint);
 
-        checkHTTPBodyParameters(monitoredEndpointToUpdate);
-
-        MonitoredEndpoint monitoredEndpoint = ifEndpointExistReturnItElseThrowException(parsedId);
-        if (isTheUserOwnerOfThisEndpoint(accessToken, monitoredEndpoint))
+        if (isTheUserOwnerOfThisEndpoint(accessToken, getEndpoint))
             return logAddNewMonitoringResultAndReturnTheEndpoint(
-                    monitoredEndpointService.updateMonitoredEndpoint(parsedId, monitoredEndpointToUpdate)
+                    monitoredEndpointService.updateMonitoredEndpoint(getEndpoint.getId(), monitoredEndpointToUpdate)
             );
-        else throw logCreateMonitoringResultAndThrowForbiddenException(monitoredEndpoint, "update");
+        else throw logCreateMonitoringResultAndThrowForbiddenException(getEndpoint, "update");
     }
 
 
     @DeleteMapping("/{id}")
     void deleteMonitoredEndpoint(@PathVariable String id, @RequestHeader(value = "accessToken") String accessToken) throws InvalidPath, InvalidPrecondition, NoSuchUser {
 
-        checkAccessToken(accessToken);
-        int parsedId = tryParseIdThrowExceptionIfUnableToParse(id);
+        MonitoredEndpoint endpointToDelete = returnMonitoredEndpointIfItExistsElseThrowException(tryParseIdThrowExceptionIfUnableToParse(id));
+        checkAccessToken(accessToken, endpointToDelete);
 
-        MonitoredEndpoint endpointToDelete = ifEndpointExistReturnItElseThrowException(parsedId);
         if (isTheUserOwnerOfThisEndpoint(accessToken, endpointToDelete)) {
-            logger.info("Deleting Monitored Endpoint id: " + parsedId);
+            logger.info("Deleting Monitored Endpoint id: " + endpointToDelete.getId());
             monitoringResultService.deleteAllMonitoredResultsForMonitoredEndpoint(endpointToDelete);
             monitoredEndpointService
-                    .deleteMonitoredEndpoint(monitoredEndpointService.getMonitoredEndpoint(parsedId));
+                    .deleteMonitoredEndpoint(monitoredEndpointService.getMonitoredEndpoint(endpointToDelete.getId()));
         } else throw logCreateMonitoringResultAndThrowForbiddenException(endpointToDelete, "delete");
     }
 
-    private void checkHTTPBodyParameters(MonitoredEndpoint monitoredEndpointToUpdate) {
-        if (monitoredEndpointToUpdate.getName() == null || monitoredEndpointToUpdate.getUrl() == null)
-            throw new InvalidPrecondition("Request body is missing either name or url");
-        if (!monitoredEndpointToUpdate.getUrl().matches("https?://(www\\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6}\\b([-a-zA-Z0-9()@:%_+.~#?&/=]*)"))
-            throw new InvalidPrecondition("Wrong url format");
+    private void checkHTTPBodyParameters(MonitoredEndpoint monitoredEndpointFromHTTPBody, MonitoredEndpoint existingEndpoint) {
+        String message;
+        if (monitoredEndpointFromHTTPBody.getName() == null || monitoredEndpointFromHTTPBody.getUrl() == null) {
+            message = "HTTP body is missing either name or url";
+            logger.info("Status code: " + HttpStatus.PRECONDITION_FAILED.value() + ", payload: " + message);
+
+            if (existingEndpoint!=null) monitoringResultService.createNewMonitoredResultForMonitoredEndpoint(existingEndpoint, HttpStatus.PRECONDITION_FAILED.value(), message);
+
+            throw new InvalidPrecondition(message);
+        }
+        if (!monitoredEndpointFromHTTPBody.getUrl().matches("https?://(www\\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6}\\b([-a-zA-Z0-9()@:%_+.~#?&/=]*)")){
+            message = "Wrong url format";
+            logger.info("Status code: " + HttpStatus.PRECONDITION_FAILED.value() + ", payload: " + message);
+
+            if (existingEndpoint!=null) monitoringResultService.createNewMonitoredResultForMonitoredEndpoint(existingEndpoint, HttpStatus.PRECONDITION_FAILED.value(), message);
+
+            throw new InvalidPrecondition(message);
+        }
     }
 
-    private void checkAccessToken(String accessToken) throws InvalidPrecondition, NoSuchUser {
+    private void checkAccessToken(String accessToken, MonitoredEndpoint monitoredEndpoint) throws InvalidPrecondition, NoSuchUser {
+        String message;
         if (!accessToken.matches("[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}")) {
-            throw new InvalidPrecondition("Valid token not provided");
+            message = "Valid token not provided";
+            logger.info("Status code: " + HttpStatus.PRECONDITION_FAILED.value() + ", payload: " + message);
+            if (monitoredEndpoint!=null) {
+                monitoringResultService.createNewMonitoredResultForMonitoredEndpoint(monitoredEndpoint, HttpStatus.PRECONDITION_FAILED.value(), message);
+            }
+            throw new InvalidPrecondition(message);
         }
         if (userService.getUserByToken(accessToken) == null){
+            message = "Cannot find user with token: " + accessToken;
+            logger.info("Status code: " + HttpStatus.UNAUTHORIZED.value() + ", payload: " + message);
+            if (monitoredEndpoint!=null) {
+                monitoringResultService.createNewMonitoredResultForMonitoredEndpoint(monitoredEndpoint, HttpStatus.UNAUTHORIZED.value(), message);
+            }
             throw new NoSuchUser("Cannot find user with token: " + accessToken);
         }
     }
 
-    private MonitoredEndpoint ifEndpointExistReturnItElseThrowException(int parsedId) {
+    private MonitoredEndpoint returnMonitoredEndpointIfItExistsElseThrowException(int parsedId) {
         MonitoredEndpoint endpointToDelete = monitoredEndpointService.getMonitoredEndpoint(parsedId);
 
         if (endpointToDelete == null)
@@ -161,18 +182,18 @@ public class MonitoredEndpointController {
     }
 
     private ForbiddenException logCreateMonitoringResultAndThrowForbiddenException(MonitoredEndpoint getEndpoint, String message) {
-        ForbiddenException unauthorizedException = new ForbiddenException(message);
-        logger.info("Status code: " + HttpStatus.FORBIDDEN.value() + ", payload: " + unauthorizedException);
+        String forbiddenMessage = String.format("You are not allowed to %s this endpoint", message); //Great Cthulhu will be summoned by these words
+        logger.info("Status code: " + HttpStatus.FORBIDDEN.value() + ", payload: " + forbiddenMessage);
         monitoringResultService.createNewMonitoredResultForMonitoredEndpoint(
-                getEndpoint, HttpStatus.FORBIDDEN.value(), unauthorizedException.toString()
+                getEndpoint, HttpStatus.FORBIDDEN.value(), forbiddenMessage
         );
-        throw unauthorizedException;
+        throw new ForbiddenException(forbiddenMessage); // Great Cthulhu is coming
     }
 
     @ResponseStatus(value = HttpStatus.FORBIDDEN)
     private static class ForbiddenException extends RuntimeException {
         public ForbiddenException(String message) {
-            super(String.format("You are not allowed to %s this endpoint", message));
+            super(message);
         }
 
     }
