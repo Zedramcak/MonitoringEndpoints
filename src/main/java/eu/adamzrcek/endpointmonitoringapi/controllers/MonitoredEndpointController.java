@@ -11,7 +11,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
-import java.awt.*;
 import java.util.List;
 
 @RestController
@@ -116,15 +115,17 @@ public class MonitoredEndpointController {
             message = "HTTP body is missing either name or url";
             logger.info("Status code: " + HttpStatus.PRECONDITION_FAILED.value() + ", payload: " + message);
 
-            if (existingEndpoint!=null) monitoringResultService.createNewMonitoredResultForMonitoredEndpoint(existingEndpoint, HttpStatus.PRECONDITION_FAILED.value(), message);
+            if (existingEndpoint != null)
+                monitoringResultService.createNewMonitoredResultForMonitoredEndpoint(existingEndpoint, HttpStatus.PRECONDITION_FAILED.value(), message);
 
             throw new InvalidPrecondition(message);
         }
-        if (!monitoredEndpointFromHTTPBody.getUrl().matches("https?://(www\\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6}\\b([-a-zA-Z0-9()@:%_+.~#?&/=]*)")){
+        if (!monitoredEndpointFromHTTPBody.getUrl().matches("https?://(www\\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6}\\b([-a-zA-Z0-9()@:%_+.~#?&/=]*)")) {
             message = "Wrong url format";
             logger.info("Status code: " + HttpStatus.PRECONDITION_FAILED.value() + ", payload: " + message);
 
-            if (existingEndpoint!=null) monitoringResultService.createNewMonitoredResultForMonitoredEndpoint(existingEndpoint, HttpStatus.PRECONDITION_FAILED.value(), message);
+            if (existingEndpoint != null)
+                monitoringResultService.createNewMonitoredResultForMonitoredEndpoint(existingEndpoint, HttpStatus.PRECONDITION_FAILED.value(), message);
 
             throw new InvalidPrecondition(message);
         }
@@ -135,15 +136,15 @@ public class MonitoredEndpointController {
         if (!accessToken.matches("[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}")) {
             message = "Valid token not provided";
             logger.info("Status code: " + HttpStatus.PRECONDITION_FAILED.value() + ", payload: " + message);
-            if (monitoredEndpoint!=null) {
+            if (monitoredEndpoint != null) {
                 monitoringResultService.createNewMonitoredResultForMonitoredEndpoint(monitoredEndpoint, HttpStatus.PRECONDITION_FAILED.value(), message);
             }
             throw new InvalidPrecondition(message);
         }
-        if (userService.getUserByToken(accessToken) == null){
+        if (userService.getUserByToken(accessToken) == null) {
             message = "Cannot find user with token: " + accessToken;
             logger.info("Status code: " + HttpStatus.UNAUTHORIZED.value() + ", payload: " + message);
-            if (monitoredEndpoint!=null) {
+            if (monitoredEndpoint != null) {
                 monitoringResultService.createNewMonitoredResultForMonitoredEndpoint(monitoredEndpoint, HttpStatus.UNAUTHORIZED.value(), message);
             }
             throw new NoSuchUser("Cannot find user with token: " + accessToken);

@@ -13,7 +13,8 @@ import org.springframework.boot.web.server.LocalServerPort;
 import org.springframework.http.*;
 import org.springframework.transaction.annotation.Transactional;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
@@ -44,7 +45,7 @@ class MonitoredEndpointControllerTest {
     @LocalServerPort
     private int port;
 
-    private String getRootUrl(){
+    private String getRootUrl() {
         return "http://localhost:" + port;
     }
 
@@ -72,7 +73,7 @@ class MonitoredEndpointControllerTest {
     }
 
     @BeforeEach
-    public void setup(){
+    public void setup() {
         headers = new HttpHeaders();
         invalidToken = "This is not a valid token";
         validToken = "4ffb5e1a-7011-4f5e-9566-a784ff2f131a";
@@ -81,7 +82,7 @@ class MonitoredEndpointControllerTest {
     }
 
     @Test
-    public void gettingEndpointsWithoutToken_shouldReturn400(){
+    public void gettingEndpointsWithoutToken_shouldReturn400() {
         HttpEntity<String> entity = new HttpEntity<>(null, headers);
         ResponseEntity<String> response = restTemplate.exchange(getRootUrl() + "/monitoredEndpoint",
                 HttpMethod.GET, entity, String.class);
@@ -89,7 +90,7 @@ class MonitoredEndpointControllerTest {
     }
 
     @Test
-    public void gettingEndpointsWithInvalidToken_shouldReturn412(){
+    public void gettingEndpointsWithInvalidToken_shouldReturn412() {
         headers.add("accessToken", invalidToken);
         HttpEntity<String> entity = new HttpEntity<>(null, headers);
         ResponseEntity<String> response = restTemplate.exchange(getRootUrl() + "/monitoredEndpoint",
@@ -98,7 +99,7 @@ class MonitoredEndpointControllerTest {
     }
 
     @Test
-    public void gettingEndpointsWithValidTokenNotInDatabase_shouldReturn401(){
+    public void gettingEndpointsWithValidTokenNotInDatabase_shouldReturn401() {
         headers.add("accessToken", validToken);
         HttpEntity<String> entity = new HttpEntity<>(null, headers);
         ResponseEntity<String> response = restTemplate.exchange(getRootUrl() + "/monitoredEndpoint",
@@ -107,7 +108,7 @@ class MonitoredEndpointControllerTest {
     }
 
     @Test
-    public void gettingEndpointWithValidTokenOfUserInDatabase_ShouldReturn200(){
+    public void gettingEndpointWithValidTokenOfUserInDatabase_ShouldReturn200() {
         headers.add("accessToken", validTokenForUserWithEndpoints);
         HttpEntity<String> entity = new HttpEntity<>(null, headers);
         ResponseEntity<String> response = restTemplate.exchange(getRootUrl() + "/monitoredEndpoint",
@@ -116,13 +117,13 @@ class MonitoredEndpointControllerTest {
     }
 
     @Test
-    public void creatingNewEndpointWithValidToken(){
+    public void creatingNewEndpointWithValidToken() {
         headers.add("accessToken", validTokenForUserWithEndpoints);
         MonitoredEndpoint testEndpoint = new MonitoredEndpoint();
         testEndpoint.setName("TEST ENDPOINT");
         HttpEntity<MonitoredEndpoint> entity = new HttpEntity<>(testEndpoint, headers);
         ResponseEntity<MonitoredEndpoint> postResponse = restTemplate.exchange(getRootUrl() + "/monitoredEndpoint",
-                HttpMethod.POST , entity, MonitoredEndpoint.class);
+                HttpMethod.POST, entity, MonitoredEndpoint.class);
         assertNotNull(postResponse);
         assertNotNull(postResponse.getBody());
         assertEquals(HttpStatus.CREATED, postResponse.getStatusCode());
@@ -131,7 +132,7 @@ class MonitoredEndpointControllerTest {
     }
 
     @Test
-    public void gettingEndpointWithDifferentUser_ShouldReturn403(){
+    public void gettingEndpointWithDifferentUser_ShouldReturn403() {
         headers.add("accessToken", validTokenForUserWithoutEndpoints);
         HttpEntity<String> entity = new HttpEntity<>(null, headers);
         ResponseEntity<String> responseEntity = restTemplate.exchange(getRootUrl() + "/monitoredEndpoint/" + idOfCreatedEndpoint,

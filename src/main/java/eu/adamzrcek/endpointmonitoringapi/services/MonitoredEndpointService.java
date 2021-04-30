@@ -64,8 +64,8 @@ public class MonitoredEndpointService implements IMonitoredEndpointService {
     private void setMonitoredIntervalAndLastCheckIfItHasBennSetBefore(MonitoredEndpoint monitoredEndpoint, Timestamp localTime) {
         monitoredEndpoint.setMonitoredInterval(
                 (int) Duration.between(
-                    monitoredEndpoint.getDateOfLastCheck().toLocalDateTime(),
-                    localTime.toLocalDateTime()
+                        monitoredEndpoint.getDateOfLastCheck().toLocalDateTime(),
+                        localTime.toLocalDateTime()
                 ).toSeconds());
         monitoredEndpoint.setDateOfLastCheck(localTime);
     }

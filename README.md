@@ -3,13 +3,14 @@
 This is a simple REST API Spring Boot microservice for monitors particular urls.
 
 ## DB setup
+
 - Make sure you have your MYSQL server running
-- If you want to change your Mysql url, username and password go to .\MonitoringEndpoints\src\main\resources\application.properties
-- default values 
+- If you want to change your Mysql url, username and password go to
+  .\MonitoringEndpoints\src\main\resources\application.properties
+- default values
     - url : jdbc:mysql://localhost:3306/endpointMonitoring
     - username : root
     - password : password
- 
 
 ## Installation
 
@@ -18,13 +19,15 @@ $ git clone https://github.com/Zedramcak/MonitoringEndpoints.git
 $ cd .\MonitoringEndpoints\
 $ .\gradlew bootRun
 ```
+
 Your app should now be running on [localhost:8080](http://localhost:8080/).
 
 ## User database
+
 - User DB will be automatically filled with two users</br>
-  
+
   | user_name        | email           | access_token  |
-  | ------------- |:-------------:| -----:|
+    | ------------- |:-------------:| -----:|
   | Applifting      | info@applifting.cz | 93f39e2f-80de-4033-99ee-249d92736a25 |
   | Batman     | batman@example.com      |   dcb20f8a-5657-4f1b-9f7f-ce65739b359e |
 
