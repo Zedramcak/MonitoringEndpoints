@@ -2,32 +2,37 @@
 
 This is a simple REST API Spring Boot microservice for monitors particular urls.
 
-[comment]: <> (## Installation)
+## Prerequisites
+- Make sure you have your MYSQL server running
+- If you want to change your Mysql url, username and password go to .\MonitoringEndpoints\src\main\resources\application.properties
+ 
 
-[comment]: <> (Use the package manager [pip]&#40;https://pip.pypa.io/en/stable/&#41; to install foobar.)
+## Installation
 
-[comment]: <> (```bash)
+```shell
+$ git clone https://github.com/Zedramcak/MonitoringEndpoints.git
+$ cd .\MonitoringEndpoints\
+$ .\gradlew bootRun
+```
+Your app should now be running on [localhost:8080](http://localhost:8080/).
 
-[comment]: <> (pip install foobar)
+## User database
+- User DB will be automatically filled with two users</br>
+  
+  | user_name        | email           | access_token  |
+  | ------------- |:-------------:| -----:|
+  | Applifting      | info@applifting.cz | 93f39e2f-80de-4033-99ee-249d92736a25 |
+  | Batman     | batman@example.com      |   dcb20f8a-5657-4f1b-9f7f-ce65739b359e |
 
-[comment]: <> (```)
+## CRUD
 
-[comment]: <> (## Usage)
+For every method call accessToken must be provided in the HTTP header
 
-[comment]: <> (```python)
-
-[comment]: <> (import foobar)
-
-[comment]: <> (foobar.pluralize&#40;'word'&#41; # returns 'words')
-
-[comment]: <> (foobar.pluralize&#40;'goose'&#41; # returns 'geese')
-
-[comment]: <> (foobar.singularize&#40;'phenomena'&#41; # returns 'phenomenon')
-
-[comment]: <> (```)
-
-[comment]: <> (## Contributing)
-
-[comment]: <> (Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.)
-
-[comment]: <> (Please make sure to update tests as appropriate.)
+| METHOD  | URL  | DESCRIPTION  |
+|---	  |:---:	|---	|
+| GET  | /monitoredEndpoint  | Return all Endpoints of the user  |
+| POST  | /monitoredEndpoint  | creates new Endpoint for the user  |
+| GET  | /monitoredEndpoint/{id}  | Returns Endpoint  |
+| PUT  | /monitoredEndpoint/{id}  | Edits Endpoint  |
+| DELETE  |  /monitoredEndpoint/{id} | Deletes Endpoint  |
+| GET  | /monitoredEndpoint/{id}/monitoringResults  | Returns last 10 Monitoring results for the Endpoint  |
