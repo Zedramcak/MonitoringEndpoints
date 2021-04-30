@@ -27,7 +27,7 @@ public class MonitoredEndpointService implements IMonitoredEndpointService {
 
     @Override
     public MonitoredEndpoint createNewMonitoredEndpoint(MonitoredEndpoint newMonitoredEndpoint) {
-        newMonitoredEndpoint.setDateOfCreation(Timestamp.valueOf(LocalDateTime.now()));
+        newMonitoredEndpoint.setDateOfCreation(getTimestampOfLocalDateTime());
         newMonitoredEndpoint = repository.save(newMonitoredEndpoint);
         newMonitoredEndpoint.setUrl("/monitoredEndpoint/" + newMonitoredEndpoint.getId());
         return repository.save(newMonitoredEndpoint);
@@ -35,10 +35,10 @@ public class MonitoredEndpointService implements IMonitoredEndpointService {
 
     @Override
     public MonitoredEndpoint updateMonitoredEndpoint(int id, MonitoredEndpoint endpointToUpdate) {
-        getMonitoredEndpoint(id).setName(endpointToUpdate.getName());
-        endpointToUpdate = getMonitoredEndpoint(id);
-        endpointToUpdate.setDateOfLastCheck(Timestamp.valueOf(LocalDateTime.now()));
-        endpointToUpdate.setMonitoredInterval(endpointToUpdate.getDateOfLastCheck().compareTo(Timestamp.valueOf(LocalDateTime.now())));
+        MonitoredEndpoint previousEndpoint = repository.getMonitoredEndpointById(id);
+        previousEndpoint.setName(endpointToUpdate.getName());
+        endpointToUpdate = previousEndpoint;
+        setMonitoredIntervalAndLastCheck(endpointToUpdate);
         return repository.save(endpointToUpdate);
     }
 
@@ -50,25 +50,38 @@ public class MonitoredEndpointService implements IMonitoredEndpointService {
     @Override
     public MonitoredEndpoint getMonitoredEndpoint(int id) {
         MonitoredEndpoint endpointToFind = repository.getMonitoredEndpointById(id);
-        Timestamp localTime = Timestamp.valueOf(LocalDateTime.now());
-        if (endpointToFind == null) {
-            return null;
-        }
-        if (endpointToFind.getDateOfLastCheck() == null) {
-            endpointToFind.setDateOfLastCheck(localTime);
-            endpointToFind.setMonitoredInterval(
-                    (int) Duration.between(
-                            endpointToFind.getDateOfCreation().toLocalDateTime(),
-                            localTime.toLocalDateTime()
-                    ).toSeconds()
-            );
-        } else {
-            endpointToFind.setMonitoredInterval((int) Duration.between(
-                    endpointToFind.getDateOfLastCheck().toLocalDateTime(),
-                    localTime.toLocalDateTime()
-            ).toSeconds());
-            endpointToFind.setDateOfLastCheck(localTime);
-        }
+        if (endpointToFind == null) return null;
+        setMonitoredIntervalAndLastCheck(endpointToFind);
         return endpointToFind;
+    }
+
+    private void setMonitoredIntervalAndLastCheck(MonitoredEndpoint monitoredEndpoint) {
+        Timestamp localTime = getTimestampOfLocalDateTime();
+        if (monitoredEndpoint.getDateOfLastCheck() == null)
+            setMonitoredIntervalAndLastCheckIfItHasNotBeenSetBefore(monitoredEndpoint, localTime);
+        else setMonitoredIntervalAndLastCheckIfItHasBennSetBefore(monitoredEndpoint, localTime);
+    }
+
+    private void setMonitoredIntervalAndLastCheckIfItHasBennSetBefore(MonitoredEndpoint monitoredEndpoint, Timestamp localTime) {
+        monitoredEndpoint.setMonitoredInterval(
+                (int) Duration.between(
+                    monitoredEndpoint.getDateOfLastCheck().toLocalDateTime(),
+                    localTime.toLocalDateTime()
+                ).toSeconds());
+        monitoredEndpoint.setDateOfLastCheck(localTime);
+    }
+
+    private void setMonitoredIntervalAndLastCheckIfItHasNotBeenSetBefore(MonitoredEndpoint monitoredEndpoint, Timestamp localTime) {
+        monitoredEndpoint.setDateOfLastCheck(localTime);
+        monitoredEndpoint.setMonitoredInterval(
+                (int) Duration.between(
+                        monitoredEndpoint.getDateOfCreation().toLocalDateTime(),
+                        localTime.toLocalDateTime()
+                ).toSeconds()
+        );
+    }
+
+    private Timestamp getTimestampOfLocalDateTime() {
+        return Timestamp.valueOf(LocalDateTime.now());
     }
 }
