@@ -4,6 +4,7 @@ import javax.persistence.Entity;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
+import java.util.Objects;
 
 @Entity
 public class User {
@@ -48,6 +49,19 @@ public class User {
 
     public void setAccessToken(String accessToken) {
         this.accessToken = accessToken;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof User)) return false;
+        User user = (User) o;
+        return getUserName().equals(user.getUserName()) && getEmail().equals(user.getEmail()) && getAccessToken().equals(user.getAccessToken());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(getUserName(), getEmail(), getAccessToken());
     }
 
     @Override
