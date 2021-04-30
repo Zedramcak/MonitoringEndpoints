@@ -15,4 +15,6 @@ public interface IMonitoredEndpointService {
     void deleteMonitoredEndpoint(MonitoredEndpoint endpointToDelete);
 
     MonitoredEndpoint getMonitoredEndpoint(int id);
+
+    void setMonitoredIntervalAndLastCheck(MonitoredEndpoint monitoredEndpoint);
 }

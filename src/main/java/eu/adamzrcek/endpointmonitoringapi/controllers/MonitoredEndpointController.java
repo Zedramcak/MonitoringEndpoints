@@ -31,7 +31,7 @@ public class MonitoredEndpointController {
     }
 
     @GetMapping("")
-    List<MonitoredEndpoint> getAllEndpoints(@RequestHeader(value = "accessToken") String accessToken) throws InvalidToken, NoSuchUser {
+    List<MonitoredEndpoint> getAllEndpoints(@RequestHeader(value = "accessToken") String accessToken) throws InvalidPrecondition, NoSuchUser {
         checkAccessToken(accessToken);
 
         return monitoredEndpointService.getMonitoredEndpointsForUser(userService.getUserByToken(accessToken));
@@ -40,8 +40,9 @@ public class MonitoredEndpointController {
     @PostMapping("")
     MonitoredEndpoint addNewEndpoint(@RequestHeader(value = "accessToken") String accessToken,
                                      @RequestBody MonitoredEndpoint newMonitoredEndpoint,
-                                     HttpServletResponse response) throws InvalidToken, NoSuchUser {
+                                     HttpServletResponse response) throws InvalidPrecondition, NoSuchUser {
         checkAccessToken(accessToken);
+        checkHTTPBodyParameters(newMonitoredEndpoint);
 
         newMonitoredEndpoint.setOwner(userService.getUserByToken(accessToken));
         MonitoredEndpoint createdEndpoint = monitoredEndpointService.createNewMonitoredEndpoint(newMonitoredEndpoint);
@@ -55,7 +56,7 @@ public class MonitoredEndpointController {
 
     @GetMapping("/{id}")
     MonitoredEndpoint getMonitoredEndpoint(@PathVariable String id,
-                                           @RequestHeader(value = "accessToken") String accessToken) throws InvalidPath, InvalidToken, NoSuchUser {
+                                           @RequestHeader(value = "accessToken") String accessToken) throws InvalidPath, InvalidPrecondition, NoSuchUser {
         checkAccessToken(accessToken);
         int parsedId = tryParseIdThrowExceptionIfUnableToParse(id);
 
@@ -67,7 +68,7 @@ public class MonitoredEndpointController {
 
     @GetMapping("/{id}/monitoringResults")
     List<MonitoringResult> getMonitoringResultsForMonitoredEndpoint(@PathVariable String id,
-                                                                    @RequestHeader(value = "accessToken") String accessToken) throws InvalidPath, InvalidToken, NoSuchUser {
+                                                                    @RequestHeader(value = "accessToken") String accessToken) throws InvalidPath, InvalidPrecondition, NoSuchUser {
         checkAccessToken(accessToken);
         int parsedId = tryParseIdThrowExceptionIfUnableToParse(id);
 
@@ -81,10 +82,12 @@ public class MonitoredEndpointController {
     @PutMapping("/{id}")
     MonitoredEndpoint updateMonitoredEndpoint(@RequestHeader(value = "accessToken") String accessToken,
                                               @PathVariable String id,
-                                              @RequestBody MonitoredEndpoint monitoredEndpointToUpdate) throws InvalidPath, InvalidToken, NoSuchUser {
+                                              @RequestBody MonitoredEndpoint monitoredEndpointToUpdate) throws InvalidPath, InvalidPrecondition, NoSuchUser {
         checkAccessToken(accessToken);
 
         int parsedId = tryParseIdThrowExceptionIfUnableToParse(id);
+
+        checkHTTPBodyParameters(monitoredEndpointToUpdate);
 
         MonitoredEndpoint monitoredEndpoint = ifEndpointExistReturnItElseThrowException(parsedId);
         if (isTheUserOwnerOfThisEndpoint(accessToken, monitoredEndpoint))
@@ -94,8 +97,14 @@ public class MonitoredEndpointController {
         else throw logCreateMonitoringResultAndThrowForbiddenException(monitoredEndpoint, "update");
     }
 
+    private void checkHTTPBodyParameters(MonitoredEndpoint monitoredEndpointToUpdate) {
+        if (monitoredEndpointToUpdate.getName() == null || monitoredEndpointToUpdate.getUrl() == null){
+            throw new InvalidPrecondition("Request body is missing either name or url");
+        }
+    }
+
     @DeleteMapping("/{id}")
-    void deleteMonitoredEndpoint(@PathVariable String id, @RequestHeader(value = "accessToken") String accessToken) throws InvalidPath, InvalidToken, NoSuchUser {
+    void deleteMonitoredEndpoint(@PathVariable String id, @RequestHeader(value = "accessToken") String accessToken) throws InvalidPath, InvalidPrecondition, NoSuchUser {
 
         checkAccessToken(accessToken);
         int parsedId = tryParseIdThrowExceptionIfUnableToParse(id);
@@ -109,9 +118,9 @@ public class MonitoredEndpointController {
         } else throw logCreateMonitoringResultAndThrowForbiddenException(endpointToDelete, "delete");
     }
 
-    private void checkAccessToken(String accessToken) throws InvalidToken, NoSuchUser {
+    private void checkAccessToken(String accessToken) throws InvalidPrecondition, NoSuchUser {
         if (!accessToken.matches("[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}")) {
-            throw new InvalidToken("Valid token not provided");
+            throw new InvalidPrecondition("Valid token not provided");
         }
         if (userService.getUserByToken(accessToken) == null){
             throw new NoSuchUser("Cannot find user with token: " + accessToken);
@@ -174,8 +183,8 @@ public class MonitoredEndpointController {
     }
 
     @ResponseStatus(value = HttpStatus.PRECONDITION_FAILED)
-    private static class InvalidToken extends RuntimeException {
-        public InvalidToken(String message) {
+    private static class InvalidPrecondition extends RuntimeException {
+        public InvalidPrecondition(String message) {
             super(message);
         }
     }

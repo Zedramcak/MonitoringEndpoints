@@ -29,17 +29,15 @@ public class MonitoredEndpointService implements IMonitoredEndpointService {
     public MonitoredEndpoint createNewMonitoredEndpoint(MonitoredEndpoint newMonitoredEndpoint) {
         newMonitoredEndpoint.setDateOfCreation(getTimestampOfLocalDateTime());
         newMonitoredEndpoint = repository.save(newMonitoredEndpoint);
-        newMonitoredEndpoint.setUrl("/monitoredEndpoint/" + newMonitoredEndpoint.getId());
         return repository.save(newMonitoredEndpoint);
     }
 
     @Override
     public MonitoredEndpoint updateMonitoredEndpoint(int id, MonitoredEndpoint endpointToUpdate) {
-        MonitoredEndpoint previousEndpoint = repository.getMonitoredEndpointById(id);
-        previousEndpoint.setName(endpointToUpdate.getName());
-        endpointToUpdate = previousEndpoint;
-        setMonitoredIntervalAndLastCheck(endpointToUpdate);
-        return repository.save(endpointToUpdate);
+        MonitoredEndpoint monitoredEndpoint = repository.getMonitoredEndpointById(id);
+        monitoredEndpoint.setUrl(endpointToUpdate.getUrl());
+        monitoredEndpoint.setName(endpointToUpdate.getName());
+        return repository.save(monitoredEndpoint);
     }
 
     @Override
@@ -55,7 +53,8 @@ public class MonitoredEndpointService implements IMonitoredEndpointService {
         return endpointToFind;
     }
 
-    private void setMonitoredIntervalAndLastCheck(MonitoredEndpoint monitoredEndpoint) {
+    @Override
+    public void setMonitoredIntervalAndLastCheck(MonitoredEndpoint monitoredEndpoint) {
         Timestamp localTime = getTimestampOfLocalDateTime();
         if (monitoredEndpoint.getDateOfLastCheck() == null)
             setMonitoredIntervalAndLastCheckIfItHasNotBeenSetBefore(monitoredEndpoint, localTime);
