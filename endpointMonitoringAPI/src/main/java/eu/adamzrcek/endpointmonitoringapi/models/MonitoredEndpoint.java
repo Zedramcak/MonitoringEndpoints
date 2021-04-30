@@ -10,7 +10,7 @@ import java.sql.Timestamp;
 @Entity
 public class MonitoredEndpoint {
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private int id;
 
     @NonNull

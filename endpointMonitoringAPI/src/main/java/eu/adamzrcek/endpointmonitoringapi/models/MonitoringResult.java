@@ -8,7 +8,7 @@ import java.sql.Timestamp;
 @Entity
 public class MonitoringResult {
     @Id
-    @GeneratedValue
+    @GeneratedValue(strategy = GenerationType.AUTO)
     private int id;
 
     @Column(columnDefinition = "DateTime")
