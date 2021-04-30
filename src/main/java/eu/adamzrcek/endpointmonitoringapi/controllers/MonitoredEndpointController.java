@@ -97,11 +97,6 @@ public class MonitoredEndpointController {
         else throw logCreateMonitoringResultAndThrowForbiddenException(monitoredEndpoint, "update");
     }
 
-    private void checkHTTPBodyParameters(MonitoredEndpoint monitoredEndpointToUpdate) {
-        if (monitoredEndpointToUpdate.getName() == null || monitoredEndpointToUpdate.getUrl() == null){
-            throw new InvalidPrecondition("Request body is missing either name or url");
-        }
-    }
 
     @DeleteMapping("/{id}")
     void deleteMonitoredEndpoint(@PathVariable String id, @RequestHeader(value = "accessToken") String accessToken) throws InvalidPath, InvalidPrecondition, NoSuchUser {
@@ -116,6 +111,13 @@ public class MonitoredEndpointController {
             monitoredEndpointService
                     .deleteMonitoredEndpoint(monitoredEndpointService.getMonitoredEndpoint(parsedId));
         } else throw logCreateMonitoringResultAndThrowForbiddenException(endpointToDelete, "delete");
+    }
+
+    private void checkHTTPBodyParameters(MonitoredEndpoint monitoredEndpointToUpdate) {
+        if (monitoredEndpointToUpdate.getName() == null || monitoredEndpointToUpdate.getUrl() == null)
+            throw new InvalidPrecondition("Request body is missing either name or url");
+        if (!monitoredEndpointToUpdate.getUrl().matches("https?://(www\\.)?[-a-zA-Z0-9@:%._+~#=]{1,256}\\.[a-zA-Z0-9()]{1,6}\\b([-a-zA-Z0-9()@:%_+.~#?&/=]*)"))
+            throw new InvalidPrecondition("Wrong url format");
     }
 
     private void checkAccessToken(String accessToken) throws InvalidPrecondition, NoSuchUser {
