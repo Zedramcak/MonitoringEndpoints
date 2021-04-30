@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletResponse;
 import java.util.List;
 
 @RestController
@@ -32,12 +33,14 @@ public class MonitoredEndpointController {
     @GetMapping("")
     List<MonitoredEndpoint> getAllEndpoints(@RequestHeader(value = "accessToken") String accessToken) throws InvalidToken, NoSuchUser {
         checkAccessToken(accessToken);
+
         return monitoredEndpointService.getMonitoredEndpointsForUser(userService.getUserByToken(accessToken));
     }
 
     @PostMapping("")
     MonitoredEndpoint addNewEndpoint(@RequestHeader(value = "accessToken") String accessToken,
-                                     @RequestBody MonitoredEndpoint newMonitoredEndpoint) throws InvalidToken, NoSuchUser {
+                                     @RequestBody MonitoredEndpoint newMonitoredEndpoint,
+                                     HttpServletResponse response) throws InvalidToken, NoSuchUser {
         checkAccessToken(accessToken);
 
         newMonitoredEndpoint.setOwner(userService.getUserByToken(accessToken));
@@ -46,6 +49,7 @@ public class MonitoredEndpointController {
         monitoringResultService.createNewMonitoredResultForMonitoredEndpoint(createdEndpoint,
                 HttpStatus.CREATED.value(),
                 createdEndpoint.toString());
+        response.setStatus(HttpServletResponse.SC_CREATED);
         return createdEndpoint;
     }
 
@@ -145,8 +149,8 @@ public class MonitoredEndpointController {
         return getEndpoint.getOwner().equals(userService.getUserByToken(accessToken));
     }
 
-    private UnauthorizedException logCreateMonitoringResultAndThrowForbiddenException(MonitoredEndpoint getEndpoint, String message) {
-        UnauthorizedException unauthorizedException = new UnauthorizedException(message);
+    private ForbiddenException logCreateMonitoringResultAndThrowForbiddenException(MonitoredEndpoint getEndpoint, String message) {
+        ForbiddenException unauthorizedException = new ForbiddenException(message);
         logger.info("Status code: " + HttpStatus.FORBIDDEN.value() + ", payload: " + unauthorizedException);
         monitoringResultService.createNewMonitoredResultForMonitoredEndpoint(
                 getEndpoint, HttpStatus.FORBIDDEN.value(), unauthorizedException.toString()
@@ -155,8 +159,8 @@ public class MonitoredEndpointController {
     }
 
     @ResponseStatus(value = HttpStatus.FORBIDDEN)
-    private static class UnauthorizedException extends RuntimeException {
-        public UnauthorizedException(String message) {
+    private static class ForbiddenException extends RuntimeException {
+        public ForbiddenException(String message) {
             super(String.format("You are not allowed to %s this endpoint", message));
         }
 
