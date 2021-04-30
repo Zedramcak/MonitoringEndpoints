@@ -2,9 +2,13 @@
 
 This is a simple REST API Spring Boot microservice for monitors particular urls.
 
-## Prerequisites
+## DB setup
 - Make sure you have your MYSQL server running
 - If you want to change your Mysql url, username and password go to .\MonitoringEndpoints\src\main\resources\application.properties
+- default values 
+    - url : jdbc:mysql://localhost:3306/endpointMonitoring
+    - username : root
+    - password : password
  
 
 ## Installation
